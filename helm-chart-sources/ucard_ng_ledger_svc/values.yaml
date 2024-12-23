@@ -1,0 +1,39 @@
+app:
+  name: ucard-ng-ledger-svc
+  port: 5007
+  image:
+    repository: docker.io/darksueii/ucard-ng-ledger-svc
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+
+secret:
+  name: ucard-ng-ledger-svc-secret
+  data:
+    NODE_ENV: null
+    APP_HOST: null
+    FINERACT_BASE_URL: null
+    FINERACT_TENANT_ID: null
+    TIGERBEETLE_REPLICA_ADDRESSES: null
+    TEMPORAL_ADDRESS: null
+    TEMPORAL_NAMESPACE: null
+    TEMPORAL_TASK_QUEUE: null
+    DB_HOST: null
+    DB_USERNAME: null
+    DB_PASSWORD: null
+    DB_DATABASE: null
+    DB_DATABASE_TYPE: null
+    KAFKA_BROKER: null
+    KAFKA_CLIENT_ID: null
+    KAFKA_TOPIC: null
+    TENANT_DFSP_ID: null
+
+configmap:
+  name: ucard-ng-ledger-svc-configmap
+  data:
+    APP_PORT: null
+    DB_PORT: null
+
+service:
+  type: ClusterIP
+  protocol: TCP

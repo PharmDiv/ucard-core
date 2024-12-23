@@ -1,0 +1,11 @@
+env:
+  FINERACT_API_URL: https://localhost:8443
+  FINERACT_PLATFORM_TENANT_IDENTIFIER: default
+  FINERACT_DEFAULT_TENANTDB_HOSTNAME: postgres.fineract.svc.cluster.local
+  FINERACT_DEFAULT_TENANTDB_IDENTIFIER: default
+  FINERACT_DEFAULT_TENANTDB_NAME: fineract_default
+  FINERACT_DEFAULT_TENANTDB_PORT: 5432
+  FINERACT_DEFAULT_TENANTDB_UID: postgres
+  FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME: org.postgresql.Driver
+  FINERACT_HIKARI_JDBC_URL: jdbc:postgresql://postgres.fineract.svc.cluster.local:5432/fineract_tenants
+  FINERACT_HIKARI_USERNAME: postgres

@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-server-config
+data:
+  FINERACT_DEFAULT_TENANTDB_HOSTNAME: {{ .Values.env.FINERACT_DEFAULT_TENANTDB_HOSTNAME | required "env.FINERACT_DEFAULT_TENANTDB_HOSTNAME must be set!" | quote }}
+  FINERACT_DEFAULT_TENANTDB_IDENTIFIER: {{ .Values.env.FINERACT_DEFAULT_TENANTDB_IDENTIFIER | required "env.FINERACT_DEFAULT_TENANTDB_IDENTIFIER must be set!" | quote }}
+  FINERACT_DEFAULT_TENANTDB_NAME: {{ .Values.env.FINERACT_DEFAULT_TENANTDB_NAME | required "env.FINERACT_DEFAULT_TENANTDB_NAME must be set!" | quote }}
+  FINERACT_DEFAULT_TENANTDB_PORT: {{ .Values.env.FINERACT_DEFAULT_TENANTDB_PORT | required "env.FINERACT_DEFAULT_TENANTDB_PORT must be set!" | quote }}
+  FINERACT_DEFAULT_TENANTDB_UID: {{ .Values.env.FINERACT_DEFAULT_TENANTDB_UID | required "env.FINERACT_DEFAULT_TENANTDB_UID must be set!" | quote }}
+  FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME: {{ .Values.env.FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME | required "env.FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME must be set!" | quote }}
+  FINERACT_HIKARI_JDBC_URL: {{ .Values.env.FINERACT_HIKARI_JDBC_URL | required "env.FINERACT_HIKARI_JDBC_URL must be set!" | quote }}
+  FINERACT_HIKARI_USERNAME: {{ .Values.env.FINERACT_HIKARI_USERNAME | required "env.FINERACT_HIKARI_USERNAME must be set!" | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-server
+  labels:
+    app: {{ .Release.Name }}-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-server
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-server
+    spec:
+      initContainers:
+        - name: init-mydb
+          image: busybox:1.28
+          command: ['sh', '-c', 'echo -e "Checking for the availability of POSTGRES server deployment"; while ! nc -z "postgres" 5432; do sleep 1; printf "-"; done; echo -e " >> POSTGRES server has started";']
+      containers:
+        - name: {{ .Release.Name }}-server
+          image: apache/fineract:latest
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "wget --no-check-certificate -O - http://localhost:8080/fineract-provider/actuator/health/liveness || exit 1"
+            initialDelaySeconds: 300
+            periodSeconds: 60
+            failureThreshold: 5
+            timeoutSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "wget --no-check-certificate -O - http://localhost:8080/fineract-provider/actuator/health/readiness || exit 1"
+            initialDelaySeconds: 300
+            periodSeconds: 60
+            failureThreshold: 5
+            timeoutSeconds: 10
+          ports:
+            - containerPort: 8080
+          env:
+            - name: FINERACT_DEFAULT_TENANTDB_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: POSTGRES_PASSWORD
+            - name: FINERACT_HIKARI_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: POSTGRES_PASSWORD
+            - name: FINERACT_DEFAULT_TENANTDB_HOSTNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-server-config
+                  key: FINERACT_DEFAULT_TENANTDB_HOSTNAME
+            - name: FINERACT_DEFAULT_TENANTDB_IDENTIFIER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-server-config
+                  key: FINERACT_DEFAULT_TENANTDB_IDENTIFIER
+            - name: FINERACT_DEFAULT_TENANTDB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-server-config
+                  key: FINERACT_DEFAULT_TENANTDB_NAME
+            - name: FINERACT_DEFAULT_TENANTDB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-server-config
+                  key: FINERACT_DEFAULT_TENANTDB_PORT
+            - name: FINERACT_DEFAULT_TENANTDB_UID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-server-config
+                  key: FINERACT_DEFAULT_TENANTDB_UID
+            - name: FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-server-config
+                  key: FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME
+            - name: FINERACT_HIKARI_JDBC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-server-config
+                  key: FINERACT_HIKARI_JDBC_URL
+            - name: FINERACT_HIKARI_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-server-config
+                  key: FINERACT_HIKARI_USERNAME
+            - name: FINERACT_SERVER_SSL_ENABLED
+              value: "false"
+            - name: server.port
+              value: "8080"
+            - name: FINERACT_DEFAULT_TENANTDB_CONN_PARAMS
+              value: ''
+            - name: JAVA_TOOL_OPTIONS
+              value: '-Xmx1G'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-server
+spec:
+  selector:
+    app: {{ .Release.Name }}-server
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

@@ -1,0 +1,36 @@
+apiVersion: v1
+entries:
+  fineract-crazydev:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2024-12-23T07:42:34.5733797+01:00"
+    description: A Helm chart apache fineract deployment
+    digest: 8b11b787a58fb213f75400ffc8d43e2535d6374fdd899e73678f4e9a4ce1e50e
+    name: fineract-crazydev
+    type: application
+    urls:
+    - https://pharmdiv.github.io/ucard-core/fineract-crazydev-0.1.4.tgz
+    version: 0.1.4
+  tigerbeetle:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-12-23T07:42:34.575352082+01:00"
+    description: A Helm chart for Kubernetes
+    digest: aa34b8f549963d54eb55c0773e8927f7b01689eb2c1c65b92a7773ef223025a8
+    name: tigerbeetle
+    type: application
+    urls:
+    - https://pharmdiv.github.io/ucard-core/tigerbeetle-0.1.0.tgz
+    version: 0.1.0
+  ucard-ng-token-svc:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-12-23T07:42:34.576361636+01:00"
+    description: A Helm chart for Kubernetes
+    digest: 29124f416615b554c6b16a400eca70ccf847018ea77a640603ce3c2142112491
+    name: ucard-ng-token-svc
+    type: application
+    urls:
+    - https://pharmdiv.github.io/ucard-core/ucard-ng-token-svc-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-12-23T07:42:34.572111935+01:00"

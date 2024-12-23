@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-web-app-config
+data:
+  FINERACT_API_URL: {{ .Values.env.FINERACT_API_URL | required "env.FINERACT_API_URL must be set!" | quote }}
+  FINERACT_PLATFORM_TENANT_IDENTIFIER: {{ .Values.env.FINERACT_PLATFORM_TENANT_IDENTIFIER | required "env.FINERACT_PLATFORM_TENANT_IDENTIFIER must be set!" | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web-app
+  labels:
+    app: {{ .Release.Name }}-web-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-web-app
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-web-app
+    spec:
+      initContainers:
+        - name: init-server
+          image: busybox:1.28
+          command: ['sh', '-c', 'echo -e "Checking for the availability of Fineract server server deployment"; while ! nc -z "{{ .Release.Name }}-server" 8080; do sleep 1; printf "-"; done; echo -e " >> server has started";']
+      containers:
+        - name: {{ .Release.Name }}-web-app
+          image: openmf/web-app:master
+          ports:
+            - containerPort: 80
+          env:
+            - name: FINERACT_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-web-app-config
+                  key: FINERACT_API_URL
+            - name: FINERACT_PLATFORM_TENANT_IDENTIFIER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-web-app-config
+                  key: FINERACT_PLATFORM_TENANT_IDENTIFIER
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-web-app
+spec:
+  selector:
+    app: {{ .Release.Name }}-web-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      # nodePort: 30080
+  type: ClusterIP
+
